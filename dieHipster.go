@@ -9,40 +9,38 @@ import (
   "time"
 )
 
-type flag int
+type count int
 
 const (
-  Unset flag = iota
-  True
-  False
+  Unset count = -1
 )
 
 
-var newState chan flag
+var newState chan count
 
 func main() {
   oldState := Unset // TODO read old state from disk
-  newState := make(chan flag)
+  newState = make(chan count)
 
   // This sets up a new feed and polls it for new channels/items.
   // Invoke it with 'go PollFeed(...)' to have the polling performed in a
   // separate goroutine, so you can continue with the rest of your program.
-  go PollFeed("http://feeds.gothamistllc.com/gothamist05", 5)
+  go PollFeed("http://feeds.gothamistllc.com/gothamist05", 30)
 
+  state := Unset
   for {
-    fmt.Printf("wait state\n")
-    state := <-newState // block until we get a drudge siren
+    //fmt.Printf("wait state\n")
+    state = <-newState // block until we get a drudge siren
     if oldState != state {
       // do update, write state to disk
-      fmt.Printf("%d state\n", state)
     }
-    oldState := state
-    fmt.Printf("%d ostate\n", oldState)
+    fmt.Printf("%d hipsters dancing on the head of a pin!\n", state)
+    oldState = state
   }
 }
 
 func PollFeed(uri string, timeout int) {
-  feed := rss.New(timeout, true, chanHandler, itemHandler)
+  feed := rss.New(timeout, false, chanHandler, itemHandler)
 
   for {
     if err := feed.Fetch(uri, nil); err != nil {
@@ -50,7 +48,7 @@ func PollFeed(uri string, timeout int) {
       return
     }
 
-    <-time.After(time.Duration(feed.SecondsTillUpdate() * 1e9))
+    <-time.After(time.Duration(feed.SecondsTillUpdate()))
   }
 }
 
@@ -64,13 +62,13 @@ func itemHandler(feed *rss.Feed, ch *rss.Channel, newitems []*rss.Item) {
   if  len(newitems) < 5 { 
     return // Let's not point fingers here
   }
-
+  var num count = 0
   for _,item := range newitems {
     //fmt.Printf("item %s\n",item.Title)
     if m, _ := regexp.MatchString("hipster", strings.ToLower(item.Title)); m == true {
       fmt.Printf("HIPSTER!!!! %s\n",item.Title)
-      newState<-True
+      num++
     }
   }
-  newState<-False
+  newState<-num
 }
