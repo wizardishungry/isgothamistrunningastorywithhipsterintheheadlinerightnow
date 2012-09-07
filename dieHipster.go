@@ -3,37 +3,36 @@ package main
 import (
 	"fmt"
 	rss "github.com/jteeuwen/go-pkg-rss"
+	"html/template"
 	"os"
 	"regexp"
 	"strings"
 	"time"
 )
 
-type count int
+var newState chan []*rss.Item
 
-const (
-	Unset count = -1
-)
-
-var newState chan count
+const templateName = "dieHipster.html"
+const margin = 5 // margin of safety
+const limit = 5  // number of items to show
 
 func main() {
-	oldState := Unset // TODO read old state from disk
-	newState = make(chan count)
+	oldState := make([]*rss.Item, 0) // TODO read old state from disk
+	newState = make(chan []*rss.Item)
 
 	// This sets up a new feed and polls it for new channels/items.
 	// Invoke it with 'go PollFeed(...)' to have the polling performed in a
 	// separate goroutine, so you can continue with the rest of your program.
 	go PollFeed("http://feeds.gothamistllc.com/gothamist05", 30)
 
-	state := Unset
+	var state []*rss.Item = nil
 	for {
 		//fmt.Printf("wait state\n")
-		state = <-newState // block until we get a drudge siren
-		if oldState != state {
-			// do update, write state to disk
+		state = <-newState               // block until we get a drudge siren
+		if len(oldState) != len(state) { // TODO add || uid!=uid
+			writeHtml(state)
 		}
-		fmt.Printf("%d hipsters dancing on the head of a pin!\n", state)
+		fmt.Printf("%d hipsters dancing on the head of a pin!\n", len(state))
 		oldState = state
 	}
 }
@@ -58,16 +57,31 @@ func chanHandler(feed *rss.Feed, newchannels []*rss.Channel) {
 func itemHandler(feed *rss.Feed, ch *rss.Channel, newitems []*rss.Item) {
 	fmt.Printf("%d new item(s) in %s\n", len(newitems), feed.Url)
 
-	if len(newitems) < 5 {
-		return // Let's not point fingers here
+	if len(newitems) <= margin {
+		return // Let's not point fingers here!
 	}
-	var num count = 0
+
+	items := []*rss.Item{}
 	for _, item := range newitems {
 		//fmt.Printf("item %s\n",item.Title)
 		if m, _ := regexp.MatchString("hipster", strings.ToLower(item.Title)); m == true {
 			fmt.Printf("HIPSTER!!!! %s\n", item.Title)
-			num++
+			if len(items) < limit {
+				items = append(items, item)
+			}
 		}
 	}
-	newState <- num
+	newState <- items
+}
+
+func writeHtml(items []*rss.Item) {
+	t := template.New(templateName)
+	t, err := t.ParseFiles(templateName)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, items)
+	if err != nil {
+		panic(err)
+	}
 }
