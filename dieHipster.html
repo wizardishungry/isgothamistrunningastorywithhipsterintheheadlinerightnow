@@ -1,0 +1,29 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+<head>
+<!--
+
+
+      THIS IS MY FIRST GO PROGRAM HELLO WORLD
+       - jonathan.williams@gmail.com
+
+-->
+   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+   <title>Is Gothamist runnning a story with “hipster” in the headline right now?</title>
+</head>
+<body>
+  <h1>
+    {{if .}}
+     <!-- {{index . 0 }} -->
+      Yes
+    {{else}}
+      No
+    {{end}}
+    .
+  </h1>
+  <ul>
+    {{range .}}
+      <li><a href="{{.Guid}}">{{html .Title}}</a></li>
+    {{end}}
+  </ul>
+</body>
+</html>
