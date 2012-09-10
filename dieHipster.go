@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
+	"gh-pages-publish"
 	rss "github.com/jteeuwen/go-pkg-rss"
 	"html/template"
 	"os"
-	"regexp"
 	"os/signal"
+	"regexp"
 	"strings"
 	"time"
-	"gh-pages-publish"
 )
 
 var newState chan []*rss.Item
@@ -22,21 +22,21 @@ const limit = 5  // number of items to show
 func main() {
 	oldState := make([]*rss.Item, 1) // TODO read old state from disk
 	newState = make(chan []*rss.Item)
-	var err error;
-	output, err = githubPagesPublish.New("git@github.com:WIZARDISHUNGRY/test-pages.git","gh-pages")
+	var err error
+	output, err = githubPagesPublish.New("git@github.com:WIZARDISHUNGRY/test-pages.git", "gh-pages")
 	defer output.Close()
 	if err != nil {
 		panic(err)
 	}
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
-	go func(){
-			for sig := range c {
-					// sig is a ^C, handle it
-					fmt.Fprintf(os.Stderr, "Got signal %s\n", sig)
-					output.Close()
-					return
-			}
+	go func() {
+		for sig := range c {
+			// sig is a ^C, handle it
+			fmt.Fprintf(os.Stderr, "Got signal %s\n", sig)
+			output.Close()
+			return
+		}
 	}()
 
 	// This sets up a new feed and polls it for new channels/items.
@@ -47,12 +47,12 @@ func main() {
 	var state []*rss.Item = nil
 	for {
 		//fmt.Printf("wait state\n")
-		state = <-newState               // block until we get a drudge siren
-		if len(oldState) != len(state) || func(state, oldState []*rss.Item) bool{
+		state = <-newState // block until we get a drudge siren
+		if len(oldState) != len(state) || func(state, oldState []*rss.Item) bool {
 			for _, item := range state {
-				fmt.Printf("1st order %s\n",item.Title)
+				fmt.Printf("1st order %s\n", item.Title)
 			}
-			return true;
+			return true
 		}(oldState, state) {
 			writeHtml(state)
 		}
@@ -104,7 +104,7 @@ func writeHtml(items []*rss.Item) {
 	if err != nil {
 		panic(err)
 	}
-	file, err := os.OpenFile(output.Path + "/index.html",os.O_WRONLY|os.O_CREATE,0644) 
+	file, err := os.OpenFile(output.Path+"/index.html", os.O_WRONLY|os.O_CREATE, 0644)
 	defer file.Close()
 	if err != nil {
 		panic(err)
