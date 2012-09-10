@@ -36,8 +36,7 @@ func main() {
 	go func() {
 		for _ = range c {
 			// sig is a ^C, handle it
-			output.Close()
-			return
+			os.Exit(0)
 		}
 	}()
 
@@ -100,7 +99,7 @@ func itemHandler(feed *rss.Feed, ch *rss.Channel, newitems []*rss.Item) {
 	items := []*rss.Item{}
 	for _, item := range newitems {
 		//fmt.Printf("item %s\n",item.Title)
-		if m, _ := regexp.MatchString("", strings.ToLower(item.Title)); m == true {
+		if m, _ := regexp.MatchString("hipster", strings.ToLower(item.Title)); m == true {
 			fmt.Printf("HIPSTER!!!! %s\n", item.Title)
 			if len(items) < limit {
 				items = append(items, item)
