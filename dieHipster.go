@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"gh-pages-publish"
+	"github.com/WIZARDISHUNGRY/gh-pages-publish"
 	rss "github.com/jteeuwen/go-pkg-rss"
 	"html/template"
 	"os"
